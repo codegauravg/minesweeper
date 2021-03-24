@@ -1,0 +1,15 @@
+#minefield .grid {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: darkslategray;
+    width: 50vmin;
+    height: 50vmin;
+    margin: auto;
+}
+
+#minefield .grid .cell {
+    background-color: deepskyblue;
+    position: relative;
+    text-align: center;
+    color: darkslategrey;
+}
