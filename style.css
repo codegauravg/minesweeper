@@ -1,6 +1,8 @@
 #minefield .grid {
+    flex: 1; 
     display: flex;
     flex-wrap: wrap;
+    align-content: flex-start;
     background-color: darkslategray;
     width: 50vmin;
     height: 50vmin;
@@ -8,8 +10,34 @@
 }
 
 #minefield .grid .cell {
-    background-color: deepskyblue;
     position: relative;
     text-align: center;
     color: darkslategrey;
+}
+
+.safe {
+    border: 2px solid;
+    border-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.safe.reveal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: deepskyblue !important;
+    color: darkslategrey;
+}
+  
+.bomb {
+    border: 2px solid;
+    border-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.bomb.reveal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #9c998d !important;
 }
