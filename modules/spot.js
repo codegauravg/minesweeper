@@ -6,10 +6,6 @@ class Spot extends Cell {
         this.bombCnt = 0;
         this.class = "safe";
     }
-
-    increaseBombCnt() {
-        this.bombCnt += 1;
-    }
 }
 
 export {Spot}

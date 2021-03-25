@@ -6,7 +6,7 @@ class Cell {
     }
 
     reveal() {
-        this.ele.classList.add("visible");
+        this.ele.classList.add("reveal");
         this.visible = true;
     }
 }

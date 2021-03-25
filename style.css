@@ -25,6 +25,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 24px;
     background-color: deepskyblue !important;
     color: darkslategrey;
 }
@@ -39,5 +40,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: calc(90%);
     background-color: #9c998d !important;
 }
