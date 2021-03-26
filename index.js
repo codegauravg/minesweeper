@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Predefined gametypes, keeping it scalable */
     let gameTypes = {
         typeA: { xdim: 5, ydim: 5, bombCnt: 5 },
-        typeB: { xdim: 10, ydim: 10, bombCnt: 10 },
-        typeC: { xdim: 15, ydim: 15, bombCnt: 15 },
+        typeB: { xdim: 10, ydim: 10, bombCnt: 8 },
+        typeC: { xdim: 15, ydim: 15, bombCnt: 10 },
     };
 
     const { xdim, ydim, bombCnt } = gameTypes.typeB;
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(gameMatrix);
 
     /** 
-     * Assign bomb conts to the spots 
+     * Assign bomb counts to the spots 
      * [
      *  [v,v,v,1,b,1,v,v,v,v],
      *  [v,1,1,3,2,2,v,v,v,v],
@@ -144,23 +144,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!(pos.x < 0 || pos.x > xdim - 1 || pos.y < 0 || pos.y > ydim - 1)) {
             return pos;
         }
-      })
+      });
 
 
       // reveal if next spots have a zero bomb count or nearby bomb counts
       const myPromises = [];
-      for (let n = 0; i <= fltrPos.length - 1; n++) {
-        if (matrix[fltrPos[n].x][fltrPos[n].y]) {
-          const nextSpot = document.getElementById(`${fltrPos[n].x * fltrPos[n].y}-${fltrPos[n].x}-${fltrPos[n].y}`);
-          myPromises.push(
-            setTimeout(() => {
-              clickSpot(nextSpot);
-            }, 20)
-          );
-        }
-      }
 
-      Promise.all(myPromises);
+      if (fltrPos && fltrPos.length > 0) {
+        for (let n = 0; n < fltrPos.length; n++) {
+          if (matrix && matrix[fltrPos[n].x][fltrPos[n].y]) {
+            const nextSpot = document.getElementById(`${fltrPos[n].x * fltrPos[n].y}-${fltrPos[n].x}-${fltrPos[n].y}`);
+            myPromises.push(
+              setTimeout(() => {
+                clickSpot(nextSpot);
+              }, 20)
+            );
+          }
+        }
+        Promise.all(myPromises);
+      }
 
     }
 

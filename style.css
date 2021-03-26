@@ -9,7 +9,7 @@
     margin: auto;
 }
 
-#minefield .grid .cell {
+#minefield {
     position: relative;
     text-align: center;
     color: darkslategrey;
@@ -52,23 +52,31 @@
     background-color: #9c998d !important;
 }
 
-.container{
+.flexContainer{
     display: flex;
     flex-wrap: wrap;
     margin: auto;
     width: 50vmin;
 }
 
-.container div {
+.flexContainer div {
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 5px auto;
 }
 
-.reset {
+.elements {
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 5px auto;
+}
+.gameOptions {
+    display: flex;
+    flex-direction: row;
+}
+.gameOption{
+    display: flex;
+    flex-grow: 1;
 }
