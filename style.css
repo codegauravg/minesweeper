@@ -36,10 +36,39 @@
     box-sizing: border-box;
 }
 
+.flag {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: calc(90%);
+    background-color: #9c998d !important;
+}
+
 .bomb.reveal {
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: calc(90%);
     background-color: #9c998d !important;
+}
+
+.container{
+    display: flex;
+    flex-wrap: wrap;
+    margin: auto;
+    width: 50vmin;
+}
+
+.container div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px auto;
+}
+
+.reset {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px auto;
 }

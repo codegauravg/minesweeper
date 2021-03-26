@@ -7,10 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Query the HTML Elements */
     const mineField = document.querySelector('#minefield');
     const mineGrid = mineField.getElementsByClassName("grid")[0];
+    const resetBtn = document.getElementsByClassName("reset")[0];
+    const flagCntEle = document.querySelector("#flagCount");
+    const bombCntEle = document.querySelector("#bombCount");
     
     /* Capture event using Event Bubbling */
     mineGrid.addEventListener('click', ev => {
       clickSpot(ev.target);
+    });
+
+    mineGrid.addEventListener('contextmenu', ev => {
+      ev.preventDefault();
+      flagTheSpot(ev.target);
+    });
+
+    resetBtn.addEventListener('click', ev => {
+      resetGame();
     })
 
     /* Predefined gametypes, keeping it scalable */
@@ -22,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { xdim, ydim, bombCnt } = gameTypes.typeB;
     let gameOverFlag = false;
+    let flags = 0
+
+    bombCntEle.innerHTML = bombCnt;
     
     /** 
      * Generate safe spots & bomb spots in the mine field 
@@ -82,21 +97,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
           mineGrid.appendChild(spot);
         }
-     }
+    }
+
 
     function clickSpot(spot) {
-      if (gameOverFlag) return;
+      // check if spot is revealed or is flagged
       if (spot.classList.contains('reveal') || spot.classList.contains('flag')) return;
+      // check if spot has a bomb placed
       if (spot.classList.contains('bomb')) {
-        gameOver();
+        spot.innerHTML = '💣';
+        spot.classList.add('reveal');
+        if (!gameOverFlag) {
+          gameOver();
+        }
       } else {
         let total = Number(JSON.parse(spot.getAttribute('data')).noOfBombs);
         if (total !== 0) {
           spot.classList.add('reveal');
           spot.innerHTML = total;
-          return;
+        } else {
+          checkNearbySpotForBomb(gameMatrix, spot);
         }
-        checkNearbySpotForBomb(gameMatrix, spot);
       }
       spot.classList.add('reveal');
     }
@@ -125,36 +146,91 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
 
+
+      // reveal if next spots have a zero bomb count or nearby bomb counts
+      const myPromises = [];
       for (let n = 0; i <= fltrPos.length - 1; n++) {
         if (matrix[fltrPos[n].x][fltrPos[n].y]) {
           const nextSpot = document.getElementById(`${fltrPos[n].x * fltrPos[n].y}-${fltrPos[n].x}-${fltrPos[n].y}`);
-          setTimeout(() => {
-            clickSpot(nextSpot);
-          }, 20);
+          myPromises.push(
+            setTimeout(() => {
+              clickSpot(nextSpot);
+            }, 20)
+          );
         }
       }
 
+      Promise.all(myPromises);
+
     }
 
-    function gameOver() {
-      gameOverFlag = true;
-      alert('Game Over! You are dead!');
+    /* Add Flag to the spot on right click */
+    function flagTheSpot(spot) {
+      // check if gameOver?
+      if (gameOverFlag) return;
+      // check if spot is revealed
+      if (spot.classList.contains('reveal')) return;
+      // check if bomb count is greater than flag count
+      if (flags < bombCnt) {
+        if (!spot.classList.contains('flag')) {
+          spot.classList.add('flag');
+          spot.innerHTML= '🚩';
+          flags += 1;
+          // if bomb count is equal to flag count, check for win
+          if (flags === bombCnt) {
+            checkIfWon();
+          }
+        } else {
+          spot.classList.remove('flag');
+          spot.innerHTML = '';
+          flags -= 1;
+        }
+        flagCntEle.innerHTML = flags;
 
+      }
+    }
+
+
+    /**
+     * Check if player won
+     */
+    function checkIfWon() {
+      let count = 0;
+      for (const spot of mineGrid.children) {
+        if (spot.classList.contains('bomb') && spot.classList.contains('flag')) {
+          count += 1;
+        }
+      }
+      if (count === bombCnt) {
+        alert('You Won !');
+        gameOverFlag = true;
+      }
+    }
+
+
+    function gameOver() {
       /** 
        * Reveal the mine field
        * mineGrid.children is a HTMLCollection
        * */
-      
+
+      const myPromises = [];
       for (const spot of mineGrid.children) {
-        console.log(spot);
-        setTimeout(() => {
-          clickSpot(spot);
-          if (spot.classList.contains('bomb')) {
-            spot.innerHTML = '💣';
-          }
-          spot.classList.add('reveal');
-        }, 50);
+        myPromises.push(
+          setTimeout(() => {
+            clickSpot(spot);
+          }, 50)
+        );
       }
+      Promise.all(myPromises)
+      .then(() => {
+        gameOverFlag = true;
+        alert('Game Over! You are dead!');
+      });
+
     }
 
+    function resetGame() {
+      location.reload();
+    }
 })
