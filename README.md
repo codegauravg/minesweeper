@@ -5,4 +5,6 @@ An Interview Assignment
 
 Must Have -> nodejs
 
-npm run dev from project directory to play the game.
+1.  npm install
+2.  npm run dev
+from project directory to play the game.
