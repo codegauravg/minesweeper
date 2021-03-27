@@ -1,31 +1,22 @@
 /* Utility functions goes here */
 
 export default {
-    randomPos(n, min, max) {
-        let randomNumber = null;
+    randomPos(n, min, xmax, ymax) {
         let positions = [];
-        for (let i = 0; i < n; i++) {
-            //  To generate random numbers between min and maximum.
-            randomNumber = this.generateRandomNumber(positions, min, max);
-            positions.push(randomNumber);
+        let i = 0;
+        
+        while (i < n) {
+            const x = Math.round(min + Math.random() * (xmax - min - 1));
+            const y = Math.round(min + Math.random() * (ymax - min - 1));
+            const random = `${x}/${y}`;
+            if (positions.indexOf(random) < 0) {
+                positions.push(random);
+                i += 1;
+            }
         }
-        return positions;
-    },
 
-    generateRandomNumber(arr, min, max) {
-        const num = Math.round(min + Math.random() * (max - min));
-        if (arr.indexOf(num) < 0) {
-            return num;
-        } else {
-            this.generateRandomNumber(arr, min, max);
-        }
+        return { bombPositions: positions, bombCnt: positions.length };
     },
-
-    /* randomPos(n, min, max) {
-        const positions = Array(max - min).fill().map((_, index) => index + 1);
-        positions.sort(() => Math.random() - 0.5);
-        return positions.slice(0, n);
-    }, */
 
     findNearbyBombs({gameMatrix, i, j, xdim, ydim}) {
         let count = 0;

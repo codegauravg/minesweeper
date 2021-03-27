@@ -25,18 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
       resetGame();
     })
 
-    /* Predefined gametypes, keeping it scalable */
-    let gameTypes = {
-        typeA: { xdim: 5, ydim: 5, bombCnt: 5 },
-        typeB: { xdim: 10, ydim: 10, bombCnt: 8 },
-        typeC: { xdim: 15, ydim: 15, bombCnt: 10 },
-    };
-
-    const { xdim, ydim, bombCnt } = gameTypes.typeB;
+    const { xdim, ydim, maxBombCnt } = { xdim: 10, ydim: 10, maxBombCnt: 8 };
     let gameOverFlag = false;
     let flags = 0
-
-    bombCntEle.innerHTML = bombCnt;
+    let unrevealedSpots = xdim * ydim;
     
     /** 
      * Generate safe spots & bomb spots in the mine field 
@@ -53,50 +45,35 @@ document.addEventListener('DOMContentLoaded', () => {
      *  [v,v,v,v,v,v,b,v,v,v],
      * ]
      * */
-    const gameArray = Array(xdim * ydim).fill(new Spot());
-    const bombPositions = utility.randomPos(bombCnt, 0, xdim * ydim - 1);
+    const { bombPositions, bombCnt } = utility.randomPos(maxBombCnt, 0, xdim, ydim);
+    bombCntEle.innerHTML = bombCnt;
     
-    bombPositions.forEach((pos) => {
-      gameArray[pos] = new Bomb();
-    });
-    
-    const gameMatrix = new Array(Math.ceil(xdim))
-    .fill()
-    .map(_ => gameArray.splice(0, xdim))
+    const gameMatrix = new Array(ydim);
 
-    console.log(gameMatrix);
-
-    /** 
-     * Assign bomb counts to the spots 
-     * [
-     *  [v,v,v,1,b,1,v,v,v,v],
-     *  [v,1,1,3,2,2,v,v,v,v],
-     *  [v,1,b,2,b,1,v,v,v,v],
-     *  [v,1,1,2,2,2,1,v,v,v],
-     *  [1,1,1,v,1,b,1,1,1,v],
-     *  [1,b,1,v,1,1,2,b,1,v],
-     *  [1,1,1,v,v,1,1,1,1,v],
-     *  [v,v,1,1,2,b,2,1,1,v],
-     *  [v,v,1,b,2,2,3,b,1,v],
-     *  [v,v,1,1,v,1,b,2,1,v],
-     * ]
-     * */
-     for (let i = 0; i < ydim; i++) {
-        for (let j = 0; j < xdim; j++) {
-          // find count of bombs in neighbour
-          const noOfBombs = utility.findNearbyBombs({gameMatrix, i, j, xdim, ydim});
-          gameMatrix[i][j].bombCnt = noOfBombs;
-          const spot = document.createElement('div');
-          spot.setAttribute('id', `${i * j}-${i}-${j}`);
-          spot.setAttribute('data', JSON.stringify({ i, j, noOfBombs, isBomb: gameMatrix[i][j].isBomb ? true : false }));
-          spot.classList.add(gameMatrix[i][j].class);
-
-          spot.style.flexBasis = `${`calc(${100/xdim}%)`}`;
-          spot.style.width = `${`calc(${100/xdim}%)`}`;
-          spot.style.height = `${`calc(${100/ydim}%)`}`;
-
-          mineGrid.appendChild(spot);
+    for (let i = 0; i < xdim; i++) {
+      gameMatrix[i] = new Array(xdim);
+      for (let j = 0; j < ydim; j++) {
+        if (bombPositions.includes(`${i}/${j}`)) {
+          gameMatrix[i][j] = new Bomb();
+        } else {
+          gameMatrix[i][j] = new Spot();
         }
+
+        /**
+         * To populate minefield with safe & bomb spots with html elements
+         */
+        const spot = document.createElement('div');
+        spot.setAttribute('id', `${i * j}-${i}-${j}`);
+        spot.setAttribute('data', JSON.stringify({ i, j }));
+        spot.classList.add(gameMatrix[i][j].class);
+
+        spot.style.flexBasis = `${`calc(${100/xdim}%)`}`;
+        spot.style.width = `${`calc(${100/xdim}%)`}`;
+        spot.style.height = `${`calc(${100/ydim}%)`}`;
+
+        gameMatrix[i][j].ele = spot;
+        mineGrid.appendChild(spot);
+      }
     }
 
 
@@ -107,27 +84,37 @@ document.addEventListener('DOMContentLoaded', () => {
       if (spot.classList.contains('bomb')) {
         spot.innerHTML = '💣';
         spot.classList.add('reveal');
+        unrevealedSpots -= 1;
         if (!gameOverFlag) {
           gameOver();
         }
       } else {
-        let total = Number(JSON.parse(spot.getAttribute('data')).noOfBombs);
-        if (total !== 0) {
+        const {i, j} = JSON.parse(spot.getAttribute('data'));
+        const noOfBombs = utility.findNearbyBombs({gameMatrix, i, j, xdim, ydim});
+        if (noOfBombs !== 0) {
           spot.classList.add('reveal');
-          spot.innerHTML = total;
+          gameMatrix[i][j].visible = true;
+          unrevealedSpots -= 1;
+          spot.innerHTML = noOfBombs;
         } else {
           checkNearbySpotForBomb(gameMatrix, spot);
         }
       }
-      spot.classList.add('reveal');
+      // if bomb count is equal to flag count, check for win
+      if (flags === bombCnt && flags === unrevealedSpots) {
+        checkIfWon();
+      }
     }
 
     function checkNearbySpotForBomb(matrix, spot) {
-      
-      // Reveal current spot
-      spot.classList.add('reveal');
 
       const {i, j} = JSON.parse(spot.getAttribute('data'));
+      gameMatrix[i][j].visible = true;
+
+      // Reveal current spot
+      spot.classList.add('reveal');
+      unrevealedSpots -= 1;
+
       //  Similar Logic for findingNearbyBombs
       let positions = [
         { x: i - 1, y: j - 1 }, // Upper Left Corner
@@ -155,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (matrix && matrix[fltrPos[n].x][fltrPos[n].y]) {
             const nextSpot = document.getElementById(`${fltrPos[n].x * fltrPos[n].y}-${fltrPos[n].x}-${fltrPos[n].y}`);
             myPromises.push(
+              // setTimeout to animate the reveal process
               setTimeout(() => {
                 clickSpot(nextSpot);
               }, 20)
@@ -179,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
           spot.innerHTML= '🚩';
           flags += 1;
           // if bomb count is equal to flag count, check for win
-          if (flags === bombCnt) {
+          if (flags === bombCnt && flags === unrevealedSpots) {
             checkIfWon();
           }
         } else {
@@ -203,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
           count += 1;
         }
       }
-      if (count === bombCnt) {
+      if (count === bombCnt && count === unrevealedSpots) {
         alert('You Won !');
         gameOverFlag = true;
       }
